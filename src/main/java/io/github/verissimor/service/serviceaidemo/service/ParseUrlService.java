@@ -3,6 +3,7 @@ package io.github.verissimor.service.serviceaidemo.service;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.verissimor.service.serviceaidemo.entities.PayableBill;
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -19,10 +20,19 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.springframework.ai.content.Media;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.util.MimeTypeUtils;
+
+import java.io.ByteArrayOutputStream;
+import javax.imageio.ImageIO;
 
 @Service
 public class ParseUrlService {
@@ -106,6 +116,7 @@ public class ParseUrlService {
       extension = url.substring(lastDot + 1).toLowerCase();
     }
 
+    var fileImages = new ArrayList<Resource>();
     String fileText;
     try {
       URL urlObj = new URL(url);
@@ -123,6 +134,19 @@ public class ParseUrlService {
             pdfStripper.setSortByPosition(true);
             pdfStripper.setWordSeparator(" ");
             pdfStripper.setLineSeparator(System.lineSeparator());
+
+            var pdfRenderer = new PDFRenderer(document);
+            for (int pageIndex = 0; pageIndex < document.getNumberOfPages(); pageIndex++) {
+              try (var outputStream = new java.io.ByteArrayOutputStream()) {
+                javax.imageio.ImageIO.write(
+                        pdfRenderer.renderImageWithDPI(pageIndex, 200f),
+                        "png",
+                        outputStream
+                );
+                fileImages.add(new org.springframework.core.io.ByteArrayResource(outputStream.toByteArray()));
+              }
+            }
+
             yield pdfStripper.getText(document);
           }
         }
@@ -135,9 +159,8 @@ public class ParseUrlService {
     BeanOutputConverter<AiBillListResponse> converter = new BeanOutputConverter<>(AiBillListResponse.class);
 
     OpenAiChatOptions options = OpenAiChatOptions.builder()
-            .model(OpenAiApi.ChatModel.GPT_4_1)
-            .maxTokens(1000)
-            .temperature(0.0)
+            .model("o4-mini")
+            .temperature(1.0) // o4 doesn't support temperature
             .responseFormat(new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, converter.getJsonSchema()))
             .build();
 
@@ -157,14 +180,19 @@ public class ParseUrlService {
                     """
     );
 
-    UserMessage userMessage = new UserMessage(
-            """
-                    Here is the CSV to parse:
+    UserMessage userMessage = UserMessage.builder()
+            .text("""
+                    Here is the content to parse:
                     ```
                     %s
                     ```
-                    """.formatted(fileText)
-    );
+                    """.formatted(fileText))
+            .media(
+                    fileImages.stream()
+                            .map(img -> new Media(org.springframework.util.MimeTypeUtils.IMAGE_PNG, img))
+                            .toList()
+            )
+            .build();
 
     Prompt prompt = new Prompt(systemMessage, userMessage);
     var response = ChatClient.create(chatModel)
