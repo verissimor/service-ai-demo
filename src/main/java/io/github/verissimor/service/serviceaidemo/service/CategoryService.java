@@ -63,7 +63,7 @@ public class CategoryService {
     BeanOutputConverter<AiCategoryListResponse> converter = new BeanOutputConverter<>(AiCategoryListResponse.class);
 
     OpenAiChatOptions options = OpenAiChatOptions.builder()
-            .model(OpenAiApi.ChatModel.GPT_4_1)
+            .model("ft:gpt-4.1-2025-04-14:personal:service-ai-demo-categ:BYrVUqP1")
             .maxTokens(1000) // helps to manage cost by limiting the quantity of tokens
             .temperature(0.0) // makes the answer closer to deterministic
             .responseFormat(new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, converter.getJsonSchema()))
