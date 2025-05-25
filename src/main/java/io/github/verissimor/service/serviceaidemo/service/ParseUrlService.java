@@ -2,6 +2,8 @@ package io.github.verissimor.service.serviceaidemo.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.verissimor.service.serviceaidemo.entities.PayableBill;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -14,6 +16,7 @@ import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
@@ -97,9 +100,34 @@ public class ParseUrlService {
   }
 
   public List<AiBillResponse> parseBillsFromUrl(String url) {
+    String extension = "";
+    int lastDot = url.lastIndexOf('.');
+    if (lastDot != -1) {
+      extension = url.substring(lastDot + 1).toLowerCase();
+    }
+
     String fileText;
     try {
-      fileText = new String(new URL(url).openStream().readAllBytes());
+      URL urlObj = new URL(url);
+
+      fileText = switch (extension) {
+        case "csv" -> {
+          try (var is = urlObj.openStream()) {
+            yield new String(is.readAllBytes());
+          }
+        }
+        case "pdf" -> {
+          try (var inputStream = urlObj.openStream();
+               var document = Loader.loadPDF(inputStream.readAllBytes())) {
+            PDFTextStripper pdfStripper = new PDFTextStripper();
+            pdfStripper.setSortByPosition(true);
+            pdfStripper.setWordSeparator(" ");
+            pdfStripper.setLineSeparator(System.lineSeparator());
+            yield pdfStripper.getText(document);
+          }
+        }
+        default -> throw new IllegalArgumentException("The extension " + extension + " is not valid");
+      };
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -20,6 +20,9 @@ repositories {
 extra["springAiVersion"] = "1.0.0"
 
 dependencies {
+	// pdf
+	implementation("org.apache.pdfbox:pdfbox:3.0.4")
+
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.ai:spring-ai-starter-model-openai")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
