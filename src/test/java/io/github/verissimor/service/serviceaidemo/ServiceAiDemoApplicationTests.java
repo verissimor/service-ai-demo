@@ -1,6 +1,7 @@
 package io.github.verissimor.service.serviceaidemo;
 
 import io.github.verissimor.service.serviceaidemo.repository.CategoryRepository;
+import io.github.verissimor.service.serviceaidemo.repository.PayableBillRepository;
 import io.github.verissimor.service.serviceaidemo.repository.SupplierRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,13 @@ public class ServiceAiDemoApplicationTests {
   @Autowired
   public SupplierRepository supplierRepository;
 
+  @Autowired
+  public PayableBillRepository payableBillRepository;
+
   @BeforeEach
   void prepareTests() {
     categoryRepository.resetCategories();
     supplierRepository.resetSuppliers();
+    payableBillRepository.resetBills();
   }
 }
