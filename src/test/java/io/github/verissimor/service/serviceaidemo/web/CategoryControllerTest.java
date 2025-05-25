@@ -27,4 +27,15 @@ class CategoryControllerTest extends ServiceAiDemoApplicationTests {
             .andExpect(jsonPath("$[1].id").value(3))
             .andExpect(jsonPath("$[1].name").value("Travel"));
   }
+
+  @Test
+  void guessNewCategory() throws Exception {
+    mockMvc.perform(get("/categories/ai-classification")
+                    .param("descriptions", "McDonald's"))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(6))
+            .andExpect(jsonPath("$[0].name").value("Eating Out"));
+  }
+
 }
