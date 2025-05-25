@@ -23,6 +23,9 @@ dependencies {
 	// pdf
 	implementation("org.apache.pdfbox:pdfbox:3.0.4")
 
+	// mcp
+	implementation("org.springframework.ai:spring-ai-starter-mcp-client")
+
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.ai:spring-ai-starter-model-openai")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

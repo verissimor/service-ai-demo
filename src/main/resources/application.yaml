@@ -4,3 +4,13 @@ spring:
   ai:
     openai:
       api-key: YOUR_KEY_HERE
+    mcp:
+      client:
+        enabled: true
+        name: mcp
+        version: 1.0.0
+        type: SYNC  # or ASYNC for reactive applications
+        request-timeout: 20s
+        stdio:
+          root-change-notification: true
+          servers-configuration: classpath:/mcp-servers-config.json
