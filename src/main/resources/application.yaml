@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: service-ai-demo
+  ai:
+    openai:
+      api-key: YOUR_KEY_HERE
