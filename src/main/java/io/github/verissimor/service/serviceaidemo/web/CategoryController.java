@@ -3,6 +3,7 @@ package io.github.verissimor.service.serviceaidemo.web;
 import io.github.verissimor.service.serviceaidemo.entities.Category;
 import io.github.verissimor.service.serviceaidemo.service.CategoryService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -19,5 +20,10 @@ public class CategoryController {
   @GetMapping("/categories")
   public List<Category> listCategories() {
     return categoryService.listCategories();
+  }
+
+  @GetMapping("/categories/ai-classification")
+  public Category guessCategory(@RequestParam String description) {
+    return categoryService.guessCategory(description);
   }
 }
