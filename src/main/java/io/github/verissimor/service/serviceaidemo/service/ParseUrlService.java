@@ -17,27 +17,68 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ParseUrlService {
 
   private final OpenAiChatModel chatModel;
+  private final CategoryService categoryService;
+  private final SupplierService supplierService;
+  private final PayableBillService payableBillService;
 
-  public ParseUrlService(OpenAiChatModel chatModel) {
+  public ParseUrlService(
+          OpenAiChatModel chatModel,
+          CategoryService categoryService,
+          SupplierService supplierService,
+          PayableBillService payableBillService
+  ) {
     this.chatModel = chatModel;
+    this.categoryService = categoryService;
+    this.supplierService = supplierService;
+    this.payableBillService = payableBillService;
   }
 
   public List<PayableBill> parseUrl(String url) {
     List<AiBillResponse> aiBills = parseBillsFromUrl(url);
 
+    var categories = aiBills.stream()
+            .map(AiBillResponse::description)
+            .distinct()
+            .toList();
+
+    var parsedCategories = categoryService.guessCategory(categories);
+
+    Map<String, Long> descriptionToCategoryId = IntStream.range(0, categories.size())
+            .boxed()
+            .collect(Collectors.toMap(
+                    categories::get,
+                    i -> parsedCategories.get(i).id()
+            ));
+
+    var suppliers = aiBills.stream()
+            .map(AiBillResponse::supplierName)
+            .distinct()
+            .toList();
+
+    var parsedSuppliers = supplierService.guessSupplier(suppliers);
+
+    Map<String, Long> supplierNameToSupplierId = IntStream.range(0, suppliers.size())
+            .boxed()
+            .collect(Collectors.toMap(
+                    suppliers::get,
+                    i -> parsedSuppliers.get(i).id()
+            ));
+
     return aiBills.stream()
-            .map(bill -> new PayableBill(
-                    null,
+            .map(bill -> payableBillService.createBill(
                     bill.description(),
                     LocalDate.parse(bill.date()),
                     bill.value(),
-                    0L,
-                    0L
+                    descriptionToCategoryId.get(bill.description()),
+                    supplierNameToSupplierId.get(bill.supplierName())
             ))
             .toList();
   }
@@ -58,7 +99,6 @@ public class ParseUrlService {
   public List<AiBillResponse> parseBillsFromUrl(String url) {
     String fileText;
     try {
-      fileText = new URL(url).openStream().transferTo(new java.io.ByteArrayOutputStream()) + "";
       fileText = new String(new URL(url).openStream().readAllBytes());
     } catch (Exception e) {
       throw new RuntimeException(e);
