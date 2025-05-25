@@ -19,6 +19,7 @@ public class PayableBillService {
     this.payableBillRepository = payableBillRepository;
   }
 
+  @Tool(description = "List all payable bills")
   public List<PayableBill> listBills() {
     return payableBillRepository.listBills();
   }

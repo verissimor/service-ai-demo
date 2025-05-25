@@ -20,6 +20,11 @@ repositories {
 extra["springAiVersion"] = "1.0.0"
 
 dependencies {
+	// reactive/assistant
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
 	// pdf
 	implementation("org.apache.pdfbox:pdfbox:3.0.4")
 

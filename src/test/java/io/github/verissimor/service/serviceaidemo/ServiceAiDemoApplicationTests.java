@@ -1,5 +1,6 @@
 package io.github.verissimor.service.serviceaidemo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.verissimor.service.serviceaidemo.repository.CategoryRepository;
 import io.github.verissimor.service.serviceaidemo.repository.PayableBillRepository;
 import io.github.verissimor.service.serviceaidemo.repository.SupplierRepository;
@@ -25,6 +26,9 @@ public class ServiceAiDemoApplicationTests {
 
   @Autowired
   public PayableBillRepository payableBillRepository;
+
+  @Autowired
+  public ObjectMapper objectMapper;
 
   @BeforeEach
   void prepareTests() {
